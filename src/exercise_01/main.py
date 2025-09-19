@@ -2,10 +2,16 @@ from pathlib import Path
 import numpy as np
 import heapq
 from collections import Counter
+from enum import Enum
 
 DATA_DIR = Path() / "data" / "MNIST"
 TEST_FILEPATH = DATA_DIR / "test.csv"
 TRAIN_FILEPATH = DATA_DIR / "train.csv"
+
+
+class Distance(str, Enum):
+    EUCLIDEAN = "euclidean"
+    MANHATTAN = "manhattan"
 
 
 def read_data() -> tuple[np.ndarray, np.ndarray]:
@@ -15,7 +21,9 @@ def read_data() -> tuple[np.ndarray, np.ndarray]:
 
 
 # TODO: add Manhattan
-def distance(v: np.ndarray, w: np.ndarray) -> float:
+def distance(
+    v: np.ndarray, w: np.ndarray, distance_type: Distance = Distance.EUCLIDEAN
+) -> float:
     """
     Distance metric between the vectors v and w.
 
@@ -23,8 +31,13 @@ def distance(v: np.ndarray, w: np.ndarray) -> float:
         v: np.ndarray(784,)
         w: np.ndarray(784,)
     """
-    # np.linalg.norm(v - w)
-    return np.sqrt(np.sum(np.square(v - w)))
+    match distance_type:
+        case Distance.EUCLIDEAN:
+            # np.linalg.norm(v - w)
+            return np.sqrt(np.sum(np.square(v - w)))
+        case Distance.MANHATTAN:
+            # np.linalg.norm(v - w, 1)
+            return np.sum(np.abs(v - w))
 
 
 def get_most_common_label(heap: list) -> int:
@@ -34,8 +47,8 @@ def get_most_common_label(heap: list) -> int:
     return counter.most_common()[0][0]
 
 
-def knn(train: np.ndarray, test: np.ndarray, k: int = 10) -> None:
-    count = 0
+def knn(train: np.ndarray, test: np.ndarray, k: int, distance_type: Distance) -> float:
+    correct_count = 0
     for row_test in test:
         test_label = row_test[0]
         label = None
@@ -53,17 +66,19 @@ def knn(train: np.ndarray, test: np.ndarray, k: int = 10) -> None:
                 else:
                     heapq.heappushpop(k_smallest, (-d, label))
         learned_label = get_most_common_label(k_smallest)
-        print(test_label, learned_label)
+        # print(test_label, learned_label)
         if test_label == learned_label:
-            count += 1
-    print(count)
+            correct_count += 1
+    accuracy = correct_count / len(test)
+    return accuracy
 
 
 def main():
     train, test = read_data()
-    knn(train, test)
-    print(train.shape)
-    print(test.shape)
+    for k in [1, 3, 5, 10, 15]:
+        for distance_type in [Distance.EUCLIDEAN, Distance.MANHATTAN]:
+            accuracy = knn(train, test, k=k, distance_type=Distance.MANHATTAN)
+            print(k, distance_type, accuracy)
 
 
 if __name__ == "__main__":
