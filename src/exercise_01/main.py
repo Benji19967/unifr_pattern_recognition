@@ -17,8 +17,9 @@ class Distance(str, Enum):
 
 
 def read_data() -> tuple[np.ndarray, np.ndarray]:
-    train = np.genfromtxt(TEST_FILEPATH, delimiter=",")
-    test = np.genfromtxt(TRAIN_FILEPATH, delimiter=",")
+    train = np.genfromtxt(TEST_FILEPATH, dtype=int, delimiter=",")
+    test = np.genfromtxt(TRAIN_FILEPATH, dtype=int, delimiter=",")
+
     return train, test
 
 
@@ -48,40 +49,45 @@ def get_most_common_label(heap: list) -> int:
     return int(counter.most_common()[0][0])
 
 
-def knn(train: np.ndarray, test: np.ndarray, k: int, distance_type: Distance) -> float:
-    correct_count = 0
+def knn(
+    train: np.ndarray, test: np.ndarray, k: int, distance_type: Distance
+) -> np.ndarray:
+    """
+    Use a max-heap to keep track of the nearest k neighbours, so as to always
+    have access to the largest of the k nearest. If new d is smaller than the largest
+    in the heap, put it in the heap and remove largest element in heap.
+    Python uses min-heap by default, so use -d instead of d.
+    """
     confusion_matrix = np.zeros((NUM_DIGITS, NUM_DIGITS))
-    for row_test in test:
-        test_label = int(row_test[0])
-        label = None
-        k_smallest = []
-        heapq.heapify(k_smallest)
+
+    for test_label, test_row in zip(test[:, 0], test[:, 1:]):
+        k_nearest = []
+        heapq.heapify(k_nearest)
         min_d = float("inf")
 
-        for row_train in train:
-            d = distance(row_test[1:], row_train[1:], distance_type)
-            min_d = -k_smallest[0][0] if k_smallest else min_d
-            if d < min_d or len(k_smallest) < k:
-                label = row_train[0]
-                if len(k_smallest) < k:
-                    heapq.heappush(k_smallest, (-d, label))
-                else:
-                    heapq.heappushpop(k_smallest, (-d, label))
-        learned_label = get_most_common_label(k_smallest)
-        confusion_matrix[test_label][learned_label] += 1
-        if test_label == learned_label:
-            correct_count += 1
-    accuracy = correct_count / len(test)
-    print(confusion_matrix)
-    return accuracy
+        for train_label, train_row in zip(train[:, 0], train[:, 1:]):
+            d = distance(test_row, train_row, distance_type)
+            if len(k_nearest) < k:
+                heapq.heappush(k_nearest, (-d, train_label))
+            else:
+                min_d = -k_nearest[0][0] if k_nearest else min_d
+                if d < min_d:
+                    heapq.heappushpop(k_nearest, (-d, train_label))
+        test_label_learned = get_most_common_label(k_nearest)
+        confusion_matrix[test_label][test_label_learned] += 1
+
+    return confusion_matrix
 
 
 def main():
     train, test = read_data()
     for k in [1, 3, 5, 10, 15]:
         for distance_type in [Distance.EUCLIDEAN, Distance.MANHATTAN]:
-            accuracy = knn(train, test, k=k, distance_type=distance_type)
+            confusion_matrix = knn(train, test, k=k, distance_type=distance_type)
+            correct_count = np.sum(confusion_matrix * np.eye(NUM_DIGITS))
+            accuracy = correct_count / len(test)
             print(k, distance_type, accuracy)
+            # print(confusion_matrix)
 
 
 if __name__ == "__main__":
