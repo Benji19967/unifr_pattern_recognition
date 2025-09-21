@@ -86,7 +86,7 @@ def main():
             confusion_matrix = knn(train, test, k=k, distance_type=distance_type)
             correct_count = np.sum(confusion_matrix * np.eye(NUM_DIGITS))
             accuracy = correct_count / len(test)
-            print(k, distance_type, accuracy)
+            print(f"k: {k}, distance: {distance_type.value}, accuracy: {accuracy}")
             # print(confusion_matrix)
 
 
