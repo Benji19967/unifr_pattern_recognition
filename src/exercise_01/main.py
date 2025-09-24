@@ -3,12 +3,15 @@ import numpy as np
 import heapq
 from collections import Counter
 from enum import Enum
+from functools import cache
 
 DATA_DIR = Path() / "data" / "MNIST"
 TEST_FILEPATH = DATA_DIR / "test.csv"
 TRAIN_FILEPATH = DATA_DIR / "train.csv"
 
 NUM_DIGITS = 10
+
+CACHE = {}
 
 
 class Distance(str, Enum):
@@ -24,7 +27,11 @@ def read_data() -> tuple[np.ndarray, np.ndarray]:
 
 
 def distance(
-    v: np.ndarray, w: np.ndarray, distance_type: Distance = Distance.EUCLIDEAN
+    v: np.ndarray,
+    w: np.ndarray,
+    v_idx: int,
+    w_idx: int,
+    distance_type: Distance = Distance.EUCLIDEAN,
 ) -> float:
     """
     Distance metric between the vectors v and w.
@@ -33,20 +40,28 @@ def distance(
         v: np.ndarray(784,)
         w: np.ndarray(784,)
     """
+    _hash = (v_idx, w_idx)
+    if _hash in CACHE:
+        return CACHE[_hash]
+
+    distance = None
     match distance_type:
         case Distance.EUCLIDEAN:
             # np.linalg.norm(v - w)
-            return np.sqrt(np.sum(np.square(v - w)))
+            distance = np.sqrt(np.sum(np.square(v - w)))
         case Distance.MANHATTAN:
             # np.linalg.norm(v - w, 1)
-            return np.sum(np.abs(v - w))
+            distance = np.sum(np.abs(v - w))
+
+    CACHE[_hash] = distance
+    return distance
 
 
 def get_most_common_label(heap: list) -> int:
     counter = Counter()
     for _, label in heap:
         counter[label] += 1
-    return int(counter.most_common()[0][0])
+    return counter.most_common()[0][0]
 
 
 def knn(
@@ -60,13 +75,15 @@ def knn(
     """
     confusion_matrix = np.zeros((NUM_DIGITS, NUM_DIGITS))
 
-    for test_label, test_row in zip(test[:, 0], test[:, 1:]):
+    for test_idx, (test_label, test_row) in enumerate(zip(test[:, 0], test[:, 1:])):
         k_nearest = []
         heapq.heapify(k_nearest)
         min_d = float("inf")
 
-        for train_label, train_row in zip(train[:, 0], train[:, 1:]):
-            d = distance(test_row, train_row, distance_type)
+        for train_idx, (train_label, train_row) in enumerate(
+            zip(train[:, 0], train[:, 1:])
+        ):
+            d = distance(test_row, train_row, test_idx, train_idx, distance_type)
             if len(k_nearest) < k:
                 heapq.heappush(k_nearest, (-d, train_label))
             else:
