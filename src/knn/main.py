@@ -2,8 +2,7 @@ from pathlib import Path
 import numpy as np
 import heapq
 from collections import Counter
-from enum import Enum
-from functools import cache
+from src.distance import distance, Distance
 
 DATA_DIR = Path() / "data" / "MNIST"
 TEST_FILEPATH = DATA_DIR / "test.csv"
@@ -11,12 +10,6 @@ TRAIN_FILEPATH = DATA_DIR / "train.csv"
 
 NUM_DIGITS = 10
 
-CACHE = {}
-
-
-class Distance(str, Enum):
-    EUCLIDEAN = "euclidean"
-    MANHATTAN = "manhattan"
 
 
 def read_data() -> tuple[np.ndarray, np.ndarray]:
@@ -24,37 +17,6 @@ def read_data() -> tuple[np.ndarray, np.ndarray]:
     test = np.genfromtxt(TEST_FILEPATH, dtype=int, delimiter=",")
 
     return train, test
-
-
-def distance(
-    v: np.ndarray,
-    w: np.ndarray,
-    v_idx: int,
-    w_idx: int,
-    distance_type: Distance = Distance.EUCLIDEAN,
-) -> float:
-    """
-    Distance metric between the vectors v and w.
-
-    Args:
-        v: np.ndarray(784,)
-        w: np.ndarray(784,)
-    """
-    _hash = (v_idx, w_idx, distance_type)
-    if _hash in CACHE:
-        return CACHE[_hash]
-
-    distance = None
-    match distance_type:
-        case Distance.EUCLIDEAN:
-            # np.linalg.norm(v - w)
-            distance = np.sqrt(np.sum(np.square(v - w)))
-        case Distance.MANHATTAN:
-            # np.linalg.norm(v - w, 1)
-            distance = np.sum(np.abs(v - w))
-
-    CACHE[_hash] = distance
-    return distance
 
 
 def get_most_common_label(heap: list) -> int:
@@ -105,8 +67,6 @@ def main():
             accuracy = correct_count / len(test)
             print(f"k: {k}, distance: {distance_type.value}, accuracy: {accuracy}")
             print(confusion_matrix)
-            break
-
 
 if __name__ == "__main__":
     main()
