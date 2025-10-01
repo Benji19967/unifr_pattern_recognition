@@ -1,4 +1,5 @@
 from collections import defaultdict
+from enum import Enum
 from pathlib import Path
 import numpy as np
 from src.distance import distance
@@ -7,6 +8,12 @@ DATA_DIR = Path("data") / "MNIST"
 TRAIN_FILEPATH = DATA_DIR / "train.csv"
 
 MAX_NUM_ITERATIONS = 50
+
+class ClusterQualityMeasure(str, Enum):
+    C_INDEX = "c_induex"
+    GOODMAN_KRUSKAL_INDEX = "goodman_kruskal_index"
+    DUNN_INDEX = "dunn_index"
+    DAVIS_BOULDING_INDEX = "davis_boulding_index"
 
 def read_data() -> tuple[np.ndarray, np.ndarray]:
     train = np.genfromtxt(TRAIN_FILEPATH, dtype=int, delimiter=",")
@@ -24,6 +31,7 @@ def calculate_center(points: np.ndarray) -> np.ndarray:
     N = len(points)
     return 1 / N * points.sum(axis=0)
 
+
 def error_for_cluster(center: np.ndarray, points: np.ndarray) -> float:
     """
     How far are the points from the cluster center
@@ -36,6 +44,18 @@ def error_for_cluster(center: np.ndarray, points: np.ndarray) -> float:
         float: error
     """
     return np.sum((points - center) ** 2)
+
+def clustering_quality(train: np.ndarray, clusters: list[list[int]], measure: ClusterQualityMeasure):
+    match measure:
+        case ClusterQualityMeasure.C_INDEX:
+            sigma = 0
+            for cluster_point_indexes in clusters:
+                for v_idx, w_idx in zip(cluster_point_indexes, cluster_point_indexes[1:]):
+                    v, w = train(v_idx), train(w_idx)
+                    d = distance(v, w, v_idx, w_idx)
+                    sigma += d
+                    # TODO
+
 
 
 def kmeans(train: np.ndarray, k: int) -> list[list[int]]:
@@ -64,8 +84,7 @@ def kmeans(train: np.ndarray, k: int) -> list[list[int]]:
 
         # compute new cluster centers
         centers = []
-        for center_idx, cluster_points_indexes in clusters.items():
-            cluster_points_indexes.append(center_idx)
+        for _, cluster_points_indexes in clusters.items():
             cluster_points = train[cluster_points_indexes]
             cluster_center = calculate_center(cluster_points)
             centers.append(cluster_center)
@@ -77,13 +96,15 @@ def kmeans(train: np.ndarray, k: int) -> list[list[int]]:
 
         prev_total_error_for_iteration = total_error_for_iteration
 
-        print(total_error_for_iteration) 
+        print(total_error_for_iteration)
+
+        return clusters.values()
 
 def main():
     train = read_data()
     for k in [5, 7, 9, 10, 12, 15]:
         print(k)
-        kmeans(train, k)
+        clusters = kmeans(train, k)
 
 if __name__ == "__main__":
     main() 
