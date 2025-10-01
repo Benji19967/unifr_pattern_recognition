@@ -20,8 +20,8 @@ class Distance(str, Enum):
 
 
 def read_data() -> tuple[np.ndarray, np.ndarray]:
-    train = np.genfromtxt(TEST_FILEPATH, dtype=int, delimiter=",")
-    test = np.genfromtxt(TRAIN_FILEPATH, dtype=int, delimiter=",")
+    train = np.genfromtxt(TRAIN_FILEPATH, dtype=int, delimiter=",")
+    test = np.genfromtxt(TEST_FILEPATH, dtype=int, delimiter=",")
 
     return train, test
 
@@ -40,7 +40,7 @@ def distance(
         v: np.ndarray(784,)
         w: np.ndarray(784,)
     """
-    _hash = (v_idx, w_idx)
+    _hash = (v_idx, w_idx, distance_type)
     if _hash in CACHE:
         return CACHE[_hash]
 
@@ -73,7 +73,7 @@ def knn(
     in the heap, put it in the heap and remove largest element in heap.
     Python uses min-heap by default, so use -d instead of d.
     """
-    confusion_matrix = np.zeros((NUM_DIGITS, NUM_DIGITS))
+    confusion_matrix = np.zeros((NUM_DIGITS, NUM_DIGITS), dtype=int)
 
     for test_idx, (test_label, test_row) in enumerate(zip(test[:, 0], test[:, 1:])):
         k_nearest = []
@@ -104,7 +104,8 @@ def main():
             correct_count = np.sum(confusion_matrix * np.eye(NUM_DIGITS))
             accuracy = correct_count / len(test)
             print(f"k: {k}, distance: {distance_type.value}, accuracy: {accuracy}")
-            # print(confusion_matrix)
+            print(confusion_matrix)
+            break
 
 
 if __name__ == "__main__":
