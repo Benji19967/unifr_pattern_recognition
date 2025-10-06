@@ -3,6 +3,7 @@ from enum import Enum
 from pathlib import Path
 import numpy as np
 from src.distance import distance
+from math import comb
 
 DATA_DIR = Path("data") / "MNIST"
 TRAIN_FILEPATH = DATA_DIR / "train.csv"
@@ -45,16 +46,35 @@ def error_for_cluster(center: np.ndarray, points: np.ndarray) -> float:
     """
     return np.sum((points - center) ** 2)
 
+def compute_min_max(train: np.ndarray, alpha: int) -> None:
+    distances = []
+    for v_idx, v in enumerate(train[: -1]):
+        for w_idx, w in enumerate(train[v_idx + 1:]):
+            d = distance(v, w, v_idx, w_idx)
+            distances.append(d)
+    # TODO: Optionally, this could be faster with a heap
+    distances.sort()
+    _min, _max = sum(distances[:alpha]), sum(distances[-alpha:])
+    return _min, _max
+
+
 def clustering_quality(train: np.ndarray, clusters: list[list[int]], measure: ClusterQualityMeasure):
     match measure:
         case ClusterQualityMeasure.C_INDEX:
             sigma = 0
+            alpha = 0
             for cluster_point_indexes in clusters:
-                for v_idx, w_idx in zip(cluster_point_indexes, cluster_point_indexes[1:]):
-                    v, w = train(v_idx), train(w_idx)
-                    d = distance(v, w, v_idx, w_idx)
-                    sigma += d
-                    # TODO
+                num_pairs_in_cluster = comb(len(cluster_point_indexes), 2)
+                alpha += num_pairs_in_cluster
+                for v_idx in cluster_point_indexes[:-1]:
+                    for w_idx in cluster_point_indexes[v_idx + 1:]:
+                        v, w = train[v_idx], train[w_idx]
+                        d = distance(v, w, v_idx, w_idx)
+                        sigma += d
+            _min, _max = compute_min_max(train, alpha)
+            # TODO: sigma should be larger than _min
+            print(sigma, alpha, _min, _max)
+            return (sigma - _min) / (_max - _min)
 
 
 
@@ -105,6 +125,8 @@ def main():
     for k in [5, 7, 9, 10, 12, 15]:
         print(k)
         clusters = kmeans(train, k)
+        c_index = clustering_quality(train, clusters, ClusterQualityMeasure.C_INDEX)
+        print(f"c_index: {c_index}")
 
 if __name__ == "__main__":
     main() 
