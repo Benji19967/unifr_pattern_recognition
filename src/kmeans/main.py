@@ -10,16 +10,19 @@ TRAIN_FILEPATH = DATA_DIR / "train.csv"
 
 MAX_NUM_ITERATIONS = 50
 
+
 class ClusterQualityMeasure(str, Enum):
     C_INDEX = "c_induex"
     GOODMAN_KRUSKAL_INDEX = "goodman_kruskal_index"
     DUNN_INDEX = "dunn_index"
     DAVIS_BOULDING_INDEX = "davis_boulding_index"
 
-def read_data() -> tuple[np.ndarray, np.ndarray]:
+
+def read_data() -> tuple[np.ndarray]:
     train = np.genfromtxt(TRAIN_FILEPATH, dtype=int, delimiter=",")
 
     return train[:, 1:]
+
 
 def calculate_center(points: np.ndarray) -> np.ndarray:
     """
@@ -46,10 +49,11 @@ def error_for_cluster(center: np.ndarray, points: np.ndarray) -> float:
     """
     return np.sum((points - center) ** 2)
 
-def compute_min_max(train: np.ndarray, alpha: int) -> None:
+
+def compute_min_max(train: np.ndarray, alpha: int) -> tuple[int, int]:
     distances = []
-    for v_idx, v in enumerate(train[: -1]):
-        for w_idx, w in enumerate(train[v_idx + 1:]):
+    for v_idx, v in enumerate(train[:-1]):
+        for w_idx, w in enumerate(train[v_idx + 1 :]):
             d = distance(v, w, v_idx, w_idx)
             distances.append(d)
     # TODO: Optionally, this could be faster with a heap
@@ -58,7 +62,9 @@ def compute_min_max(train: np.ndarray, alpha: int) -> None:
     return _min, _max
 
 
-def clustering_quality(train: np.ndarray, clusters: list[list[int]], measure: ClusterQualityMeasure):
+def clustering_quality(
+    train: np.ndarray, clusters: list[list[int]], measure: ClusterQualityMeasure
+):
     match measure:
         case ClusterQualityMeasure.C_INDEX:
             sigma = 0
@@ -67,7 +73,7 @@ def clustering_quality(train: np.ndarray, clusters: list[list[int]], measure: Cl
                 num_pairs_in_cluster = comb(len(cluster_point_indexes), 2)
                 alpha += num_pairs_in_cluster
                 for v_idx in cluster_point_indexes[:-1]:
-                    for w_idx in cluster_point_indexes[v_idx + 1:]:
+                    for w_idx in cluster_point_indexes[v_idx + 1 :]:
                         v, w = train[v_idx], train[w_idx]
                         d = distance(v, w, v_idx, w_idx)
                         sigma += d
@@ -75,7 +81,6 @@ def clustering_quality(train: np.ndarray, clusters: list[list[int]], measure: Cl
             # TODO: sigma should be larger than _min
             print(sigma, alpha, _min, _max)
             return (sigma - _min) / (_max - _min)
-
 
 
 def kmeans(train: np.ndarray, k: int) -> list[list[int]]:
@@ -94,7 +99,7 @@ def kmeans(train: np.ndarray, k: int) -> list[list[int]]:
         # assign each point to cluster of closest center
         clusters = defaultdict(list)
         for row_idx, row in enumerate(train):
-            closest_center, min_distance = None, float('inf') 
+            closest_center, min_distance = None, float("inf")
             for center_idx, center in enumerate(centers):
                 d = distance(row, center, use_cache=False)
                 if d < min_distance:
@@ -120,6 +125,7 @@ def kmeans(train: np.ndarray, k: int) -> list[list[int]]:
 
         return clusters.values()
 
+
 def main():
     train = read_data()
     for k in [5, 7, 9, 10, 12, 15]:
@@ -128,5 +134,6 @@ def main():
         c_index = clustering_quality(train, clusters, ClusterQualityMeasure.C_INDEX)
         print(f"c_index: {c_index}")
 
+
 if __name__ == "__main__":
-    main() 
+    main()
