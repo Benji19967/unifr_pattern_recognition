@@ -6,3 +6,5 @@ knn:
 kmeans:
 	python src/kmeans/main.py
 
+test:
+	pytest tests/ -vvvv -s

@@ -10,6 +10,7 @@ class ClusterQualityMeasure(str, Enum):
     DAVIS_BOULDING_INDEX = "davis_boulding_index"
 
 def _c_index_min_max(train: np.ndarray, alpha: int) -> None:
+    # TODO: Optimize for speed (remove one for loop and use vectorized operations)
     distances = []
     for v_idx, v in enumerate(train[: -1]):
         for w_idx, w in enumerate(train[v_idx + 1:]):
@@ -29,8 +30,8 @@ def clustering_quality(train: np.ndarray, clusters: list[list[int]], measure: Cl
             for cluster_point_indexes in clusters:
                 num_pairs_in_cluster = comb(len(cluster_point_indexes), 2)
                 alpha += num_pairs_in_cluster
-                for v_idx in cluster_point_indexes[:-1]:
-                    for w_idx in cluster_point_indexes[v_idx + 1:]:
+                for i, v_idx in enumerate(cluster_point_indexes[:-1]):
+                    for w_idx in cluster_point_indexes[i + 1:]:
                         v, w = train[v_idx], train[w_idx]
                         d = distance(v, w, v_idx, w_idx)
                         sigma += d
