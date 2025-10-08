@@ -5,3 +5,4 @@ knn:
 
 kmeans:
 	python src/kmeans/main.py
+
