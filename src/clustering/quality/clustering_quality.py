@@ -5,10 +5,10 @@ from src.clustering.quality.dunn_index import dunn_index
 
 
 class ClusterQualityMeasure(str, Enum):
-    C_INDEX = "c_induex"
+    C_INDEX = "c_index"
     GOODMAN_KRUSKAL_INDEX = "goodman_kruskal_index"
     DUNN_INDEX = "dunn_index"
-    DAVIS_BOULDING_INDEX = "davis_boulding_index"
+    DAVIS_BOULDIN_INDEX = "davis_bouldin_index"
 
 
 def clustering_quality(
@@ -19,3 +19,5 @@ def clustering_quality(
             return c_index(clusters, train)
         case ClusterQualityMeasure.DUNN_INDEX:
             return dunn_index(clusters, train)
+        case ClusterQualityMeasure.DAVIS_BOULDIN_INDEX:
+            return davis_bouldin_index(clusters, train)
