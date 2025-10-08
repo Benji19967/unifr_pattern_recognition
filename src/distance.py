@@ -1,11 +1,14 @@
 import numpy as np
 from enum import Enum
 
+
 class Distance(str, Enum):
     EUCLIDEAN = "euclidean"
     MANHATTAN = "manhattan"
 
+
 DISTANCE_CACHE = {}
+
 
 def distance(
     v: np.ndarray,
@@ -13,7 +16,7 @@ def distance(
     v_idx: int | None = None,
     w_idx: int | None = None,
     distance_type: Distance = Distance.EUCLIDEAN,
-    use_cache: bool = True
+    use_cache: bool = True,
 ) -> float:
     """
     Distance metric between the vectors v and w.
@@ -40,3 +43,4 @@ def distance(
     if use_cache:
         DISTANCE_CACHE[_hash] = distance
     return distance
+

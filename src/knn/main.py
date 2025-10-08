@@ -11,7 +11,6 @@ TRAIN_FILEPATH = DATA_DIR / "train.csv"
 NUM_DIGITS = 10
 
 
-
 def read_data() -> tuple[np.ndarray, np.ndarray]:
     train = np.genfromtxt(TRAIN_FILEPATH, dtype=int, delimiter=",")
     test = np.genfromtxt(TEST_FILEPATH, dtype=int, delimiter=",")
@@ -67,6 +66,7 @@ def main():
             accuracy = correct_count / len(test)
             print(f"k: {k}, distance: {distance_type.value}, accuracy: {accuracy}")
             print(confusion_matrix)
+
 
 if __name__ == "__main__":
     main()
