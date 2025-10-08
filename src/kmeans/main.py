@@ -11,10 +11,11 @@ TRAIN_FILEPATH = DATA_DIR / "train.csv"
 MAX_NUM_ITERATIONS = 50
 
 
-def read_data() -> tuple[np.ndarray, np.ndarray]:
+def read_data() -> tuple[np.ndarray]:
     train = np.genfromtxt(TRAIN_FILEPATH, dtype=int, delimiter=",")
 
     return train[:, 1:]
+
 
 def calculate_center(points: np.ndarray) -> np.ndarray:
     """
@@ -58,7 +59,7 @@ def kmeans(train: np.ndarray, k: int) -> list[list[int]]:
         # assign each point to cluster of closest center
         clusters = defaultdict(list)
         for row_idx, row in enumerate(train):
-            closest_center, min_distance = None, float('inf') 
+            closest_center, min_distance = None, float("inf")
             for center_idx, center in enumerate(centers):
                 d = distance(row, center, use_cache=False)
                 if d < min_distance:
@@ -84,6 +85,7 @@ def kmeans(train: np.ndarray, k: int) -> list[list[int]]:
 
     return list(clusters.values())
 
+
 def main():
     train = read_data()
     for k in [5, 7, 9, 10, 12, 15]:
@@ -92,5 +94,6 @@ def main():
         c_index = clustering_quality(train, clusters, ClusterQualityMeasure.C_INDEX)
         print(f"c_index: {c_index}")
 
+
 if __name__ == "__main__":
-    main() 
+    main()
