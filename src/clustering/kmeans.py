@@ -2,7 +2,10 @@ from collections import defaultdict
 from pathlib import Path
 import numpy as np
 from src.distance import distance
-from src.clustering_quality import clustering_quality, ClusterQualityMeasure
+from src.clustering.quality.clustering_quality import (
+    clustering_quality,
+    ClusterQualityMeasure,
+)
 import random
 
 DATA_DIR = Path("data") / "MNIST"
@@ -92,7 +95,11 @@ def main():
         print(k)
         clusters = kmeans(train, k)
         c_index = clustering_quality(train, clusters, ClusterQualityMeasure.C_INDEX)
+        dunn_index = clustering_quality(
+            train, clusters, ClusterQualityMeasure.DUNN_INDEX
+        )
         print(f"c_index: {c_index}")
+        print(f"dunn_index: {dunn_index}")
 
 
 if __name__ == "__main__":
