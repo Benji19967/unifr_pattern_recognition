@@ -7,6 +7,7 @@ from src.clustering.quality.clustering_quality import (
     ClusterQualityMeasure,
 )
 import random
+from sklearn.cluster._kmeans import KMeans
 
 DATA_DIR = Path("data") / "MNIST"
 TRAIN_FILEPATH = DATA_DIR / "train.csv"
@@ -14,10 +15,10 @@ TRAIN_FILEPATH = DATA_DIR / "train.csv"
 MAX_NUM_ITERATIONS = 50
 
 
-def read_data() -> tuple[np.ndarray]:
+def read_data() -> np.ndarray:
     train = np.genfromtxt(TRAIN_FILEPATH, dtype=int, delimiter=",")
 
-    return train[:, 1:]
+    return train[:, 1:], train[:, 0]
 
 
 def calculate_center(points: np.ndarray) -> np.ndarray:
@@ -90,16 +91,35 @@ def kmeans(train: np.ndarray, k: int) -> list[list[int]]:
 
 
 def main():
-    train = read_data()
-    for k in [5, 7, 9, 10, 12, 15]:
+    train, labels = read_data()
+    # for k in [5, 7, 9, 10, 12, 15]:
+    for k in [10]:
         print(k)
         clusters = kmeans(train, k)
+
+        # ---SKLEARN --- Fit clustering model
+        # kmeans = KMeans(n_clusters=k, init="random").fit(train)
+        #
+        # # Get labels
+        # # labels = kmeans.labels_
+        #
+        # # Organize indices into clusters
+        # clusters = defaultdict(list)
+        # for idx, label in enumerate(labels):
+        #     clusters[label].append(idx)
+        #
+        # # Convert to List[List[int]]
+        # clusters = list(clusters.values())
+        # --- SKLEARN ---
+
         c_index = clustering_quality(train, clusters, ClusterQualityMeasure.C_INDEX)
         dunn_index = clustering_quality(
             train, clusters, ClusterQualityMeasure.DUNN_INDEX
         )
         print(f"c_index: {c_index}")
         print(f"dunn_index: {dunn_index}")
+        for cluster in clusters:
+            print(labels[cluster])
 
 
 if __name__ == "__main__":
