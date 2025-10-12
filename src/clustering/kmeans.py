@@ -8,6 +8,7 @@ from src.clustering.quality.clustering_quality import (
 )
 import random
 from sklearn.cluster._kmeans import KMeans
+from sklearn.metrics import davies_bouldin_score
 
 DATA_DIR = Path("data") / "MNIST"
 TRAIN_FILEPATH = DATA_DIR / "train.csv"
@@ -101,7 +102,7 @@ def main():
         # kmeans = KMeans(n_clusters=k, init="random").fit(train)
         #
         # # Get labels
-        # # labels = kmeans.labels_
+        # labels = kmeans.labels_
         #
         # # Organize indices into clusters
         # clusters = defaultdict(list)
@@ -110,14 +111,22 @@ def main():
         #
         # # Convert to List[List[int]]
         # clusters = list(clusters.values())
+        #
+        # # DB Index
+        # db_score = davies_bouldin_score(train, labels)
+        # print(f"davis_bouldin_score: {db_score}")
         # --- SKLEARN ---
 
         c_index = clustering_quality(train, clusters, ClusterQualityMeasure.C_INDEX)
         dunn_index = clustering_quality(
             train, clusters, ClusterQualityMeasure.DUNN_INDEX
         )
+        davis_bouldin_index = clustering_quality(
+            train, clusters, ClusterQualityMeasure.DAVIS_BOULDIN_INDEX
+        )
         print(f"c_index: {c_index}")
         print(f"dunn_index: {dunn_index}")
+        print(f"davis_bouldin_index: {davis_bouldin_index}")
         for cluster in clusters:
             print(labels[cluster])
 

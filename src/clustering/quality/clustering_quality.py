@@ -2,6 +2,7 @@ from enum import Enum
 import numpy as np
 from src.clustering.quality.c_index import c_index
 from src.clustering.quality.dunn_index import dunn_index
+from src.clustering.quality.davis_bouldin_index import davis_bouldin_index
 
 
 class ClusterQualityMeasure(str, Enum):
