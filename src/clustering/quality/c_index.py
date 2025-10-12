@@ -28,6 +28,5 @@ def c_index(clusters: list[list[int]], train: np.ndarray):
                 d = distance(v, w, v_idx, w_idx)
                 sigma += d
     _min, _max = _c_index_min_max(train, alpha)
-    # TODO: sigma should be larger than _min
-    print(sigma, alpha, _min, _max)
+    # print(sigma, alpha, _min, _max)
     return (sigma - _min) / (_max - _min)

@@ -86,16 +86,15 @@ def kmeans(train: np.ndarray, k: int) -> list[list[int]]:
 
     prev_total_error_for_iteration = total_error_for_iteration
 
-    print(total_error_for_iteration)
+    # print(total_error_for_iteration)
 
     return list(clusters.values())
 
 
 def main():
     train, labels = read_data()
-    # for k in [5, 7, 9, 10, 12, 15]:
-    for k in [10]:
-        print(k)
+    for k in [5, 7, 9, 10, 12, 15]:
+        # for k in [10]:
         clusters = kmeans(train, k)
 
         # ---SKLEARN --- Fit clustering model
@@ -124,11 +123,11 @@ def main():
         davis_bouldin_index = clustering_quality(
             train, clusters, ClusterQualityMeasure.DAVIS_BOULDIN_INDEX
         )
-        print(f"c_index: {c_index}")
-        print(f"dunn_index: {dunn_index}")
-        print(f"davis_bouldin_index: {davis_bouldin_index}")
-        for cluster in clusters:
-            print(labels[cluster])
+        print(
+            f"k: {k}, c_index: {c_index:.2f}, dunn_index: {dunn_index:.2f}, davis_bouldin_index: {davis_bouldin_index:.2f}"
+        )
+        # for cluster in clusters:
+        #     print(labels[cluster])
 
 
 if __name__ == "__main__":
